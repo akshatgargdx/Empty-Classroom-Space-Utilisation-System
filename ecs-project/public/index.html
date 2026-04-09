@@ -1,1 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ECS System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
 
+        function App() {
+            const [user, setUser] = useState(() => JSON.parse(localStorage.getItem("user")));
+            const [token, setToken] = useState(() => localStorage.getItem("token"));
+
+            if (!user) return <Login setUser={setUser} setToken={setToken} />;
+
+            return (
+                <div>
+                    <nav class="bg-gray-800 p-4 flex justify-between items-center border-b border-gray-700">
+                        <h1 class="text-xl font-bold text-blue-400">ECS Dashboard</h1>
+                        <button onClick={() => { localStorage.clear(); location.reload(); }} class="bg-red-600 px-3 py-1 rounded text-sm">Logout</button>
+                    </nav>
+                    <Dashboard token={token} />
+                </div>
+            );
+        }
+
+        function Login({ setUser, setToken }) {
+            const handleLogin = async (e) => {
+                e.preventDefault();
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: e.target.email.value, password: e.target.password.value })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    localStorage.setItem("token", data.token);
+                    localStorage.setItem("user", JSON.stringify(data.user));
+                    setToken(data.token);
+                    setUser(data.user);
+                } else alert(data.error);
+            };
+
+            return (
+                <div class="max-w-md mx-auto mt-20 bg-gray-800 p-8 rounded-lg shadow-xl border border-gray-700 text-center">
+                    <h2 class="text-2xl font-bold text-blue-400 mb-6">ECS Login</h2>
+                    <form onSubmit={handleLogin} class="flex flex-col gap-4">
+                        <input name="email" class="p-3 bg-gray-700 rounded" placeholder="admin@ecs.com" defaultValue="admin@ecs.com" />
+                        <input name="password" type="password" class="p-3 bg-gray-700 rounded" placeholder="pass123" defaultValue="pass123" />
+                        <button class="bg-blue-600 p-3 rounded font-bold">Sign In</button>
+                    </form>
+                </div>
+            );
+        }
+
+        function Dashboard({ token }) {
+            const [rooms, setRooms] = useState([]);
+
+            useEffect(() => {
+                fetch('/api/classrooms', { headers: { 'Authorization': `Bearer ${token}` } })
+                    .then(res => res.json())
+                    .then(data => setRooms(data));
+            }, []);
+
+            return (
+                <div class="p-8 max-w-6xl mx-auto">
+                    <h2 class="text-2xl font-bold mb-8 text-gray-300">Live Classroom Availability</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                        {rooms.map(room => (
+                            <div key={room.id} class="bg-gray-800 p-6 rounded-xl border border-gray-700 flex flex-col items-center relative overflow-hidden shadow-lg">
+                                <div class={`absolute top-0 left-0 w-full h-1 ${room.status === 'Available' ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                                <span class={`px-2 py-0.5 rounded-full text-[10px] font-bold mb-4 ${room.status === 'Available' ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}`}>
+                                    {room.status}
+                                </span>
+                                <p class="text-4xl font-black mb-1">{room.room_number}</p>
+                                <p class="text-gray-400 text-sm">Cap: {room.capacity}</p>
+                                <p class="text-gray-500 text-xs mt-3 uppercase tracking-widest">{room.facilities}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
