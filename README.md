@@ -22,4 +22,5 @@ To install npm
 cd ecs-project
 npm install
 npm start
+Open your web browser and go to: http://localhost:5000
 
