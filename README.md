@@ -9,3 +9,17 @@ Time-Synced Logic: Automatic status updates based on integrated 8 AM - 4 PM coll
 Secure Authentication: Protected routes and user sessions implemented using JSON Web Tokens (JWT).
 
 Three-Tier Architecture: Built with a React frontend, Node.js/Express backend, and a relational SQLite database.
+
+
+Start it up: node server.js
+
+To stop the process, run the fix command (to ensure port 5000 is clean):
+Stop-Process -Id (Get-NetTCPConnection -LocalPort 5000).OwningProcess -Force
+
+
+To install npm
+
+cd ecs-project
+npm install
+npm start
+
